@@ -32,10 +32,10 @@ import { ChasePayPaymentStrategy, ChasePayScriptLoader } from './strategies/chas
 import { ConvergePaymentStrategy } from './strategies/converge';
 import { CreditCardPaymentStrategy } from './strategies/credit-card';
 import { CyberSourcePaymentStrategy } from './strategies/cybersource/index';
+import { ExternalPaymentStrategy } from './strategies/external';
 import { createGooglePayPaymentProcessor, GooglePayAdyenV2Initializer, GooglePayAuthorizeNetInitializer, GooglePayBraintreeInitializer, GooglePayPaymentStrategy, GooglePayStripeInitializer } from './strategies/googlepay';
 import { KlarnaPaymentStrategy, KlarnaScriptLoader } from './strategies/klarna';
 import { KlarnaV2PaymentStrategy, KlarnaV2ScriptLoader } from './strategies/klarnav2';
-import { LaybuyPaymentStrategy } from './strategies/laybuy';
 import { LegacyPaymentStrategy } from './strategies/legacy';
 import { MasterpassPaymentStrategy, MasterpassScriptLoader } from './strategies/masterpass';
 import { NoPaymentDataRequiredPaymentStrategy } from './strategies/no-payment';
@@ -440,7 +440,16 @@ export default function createPaymentStrategyRegistry(
     );
 
     registry.register(PaymentStrategyType.LAYBUY, () =>
-        new LaybuyPaymentStrategy(
+        new ExternalPaymentStrategy(
+            store,
+            orderActionCreator,
+            paymentActionCreator,
+            formPoster
+        )
+    );
+
+    registry.register(PaymentStrategyType.SEZZLE, () =>
+        new ExternalPaymentStrategy(
             store,
             orderActionCreator,
             paymentActionCreator,

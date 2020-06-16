@@ -39,6 +39,7 @@ enum PaymentStrategyType {
     WE_PAY = 'wepay',
     MASTERPASS = 'masterpass',
     STRIPE_GOOGLE_PAY = 'googlepaystripe',
+    SEZZLE = 'sezzle',
     ZIP = 'zip',
     CONVERGE = 'converge',
 }
