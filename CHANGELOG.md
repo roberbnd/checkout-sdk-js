@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.77.4-alpha.5eafd14f5b2cd5b47662ec4a41fbca29ef2ff8a2](https://github.com/bigcommerce/checkout-sdk-js/compare/v1.77.3...v1.77.4-alpha.5eafd14f5b2cd5b47662ec4a41fbca29ef2ff8a2) (2020-06-17)
+
+
+### Code Refactoring
+
+* **payment:** INT-2748 Adding Sezzle strategy ([5eafd14](https://github.com/bigcommerce/checkout-sdk-js/commit/5eafd14))
+
 ### [1.77.3](https://github.com/bigcommerce/checkout-sdk-js/compare/v1.77.2...v1.77.3) (2020-06-16)
 
 
