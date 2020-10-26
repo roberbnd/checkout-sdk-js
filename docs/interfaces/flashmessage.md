@@ -11,6 +11,7 @@
 ### Properties
 
 * [message](flashmessage.md#message)
+* [title](flashmessage.md#title)
 * [type](flashmessage.md#type)
 
 ## Properties
@@ -18,6 +19,12 @@
 ###  message
 
 • **message**: *string*
+
+___
+
+###  title
+
+• **title**: *string*
 
 ___
 
