@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.125.1-alpha.66df1bcf4a90fec4baaa33fe51c32377c2392635](https://github.com/bigcommerce/checkout-sdk-js/compare/v1.125.0...v1.125.1-alpha.66df1bcf4a90fec4baaa33fe51c32377c2392635) (2021-02-04)
+
+
+### Bug Fixes
+
+* **payment:** INT-3611 Refresh the state in Braintree ([66df1bc](https://github.com/bigcommerce/checkout-sdk-js/commit/66df1bcf4a90fec4baaa33fe51c32377c2392635))
+
 ## [1.125.0](https://github.com/bigcommerce/checkout-sdk-js/compare/v1.124.1...v1.125.0) (2021-02-03)
 
 
