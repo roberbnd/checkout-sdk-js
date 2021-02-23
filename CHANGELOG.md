@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.131.1-alpha.771a67d578620f6aba68b8deb3d8e448319c650f](https://github.com/bigcommerce/checkout-sdk-js/compare/v1.131.0...v1.131.1-alpha.771a67d578620f6aba68b8deb3d8e448319c650f) (2021-02-23)
+
+
+### Features
+
+* **payment:** INT-3896 [Zip] it returns the nonce value when it's a referred payment ([771a67d](https://github.com/bigcommerce/checkout-sdk-js/commit/771a67d578620f6aba68b8deb3d8e448319c650f))
+
 ## [1.131.0](https://github.com/bigcommerce/checkout-sdk-js/compare/v1.130.1...v1.131.0) (2021-02-22)
 
 
