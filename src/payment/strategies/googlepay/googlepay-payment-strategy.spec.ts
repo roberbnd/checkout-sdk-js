@@ -108,6 +108,14 @@ describe('GooglePayPaymentStrategy', () => {
         document.body.appendChild(container);
         document.body.appendChild(walletButton);
 
+        const googlePaymentMethodData = {
+            initializationData: {
+                nonce: '',
+                card_information: 'card_info',
+            },
+        };
+
+        jest.spyOn(store.getState().paymentMethods, 'getPaymentMethodOrThrow').mockReturnValue(googlePaymentMethodData);
         jest.spyOn(walletButton, 'removeEventListener');
         jest.spyOn(requestSender, 'post').mockReturnValue(Promise.resolve());
         jest.spyOn(checkoutActionCreator, 'loadCurrentCheckout').mockReturnValue(Promise.resolve());
@@ -210,7 +218,7 @@ describe('GooglePayPaymentStrategy', () => {
 
         beforeEach(() => {
             jest.spyOn(walletButton, 'addEventListener');
-            jest.spyOn(store, 'dispatch').mockReturnValue(Promise.resolve());
+            jest.spyOn(store, 'dispatch').mockReturnValue(Promise.resolve()).mockReturnValue(store.getState());
             googlePayOptions = {
                 methodId: 'googlepaybraintree',
                 googlepaybraintree: {
@@ -222,17 +230,20 @@ describe('GooglePayPaymentStrategy', () => {
         });
 
         it('creates the order and submit payment', async () => {
-            const googlePaymentMethodData = {
+            jest.spyOn(store.getState().paymentMethods, 'getPaymentMethodOrThrow').mockReturnValue({
                 initializationData: {
                     nonce: 'nonce',
-                    card_information: 'card_info',
+                    card_information: {
+                        type: 'type',
+                        number: 'number',
+                    },
                 },
-            };
+            });
+            await strategy.initialize(googlePayOptions);
+
             jest.spyOn(orderActionCreator, 'submitOrder').mockReturnValue(Promise.resolve());
             jest.spyOn(paymentActionCreator, 'submitPayment').mockReturnValue(Promise.resolve());
-            jest.spyOn(store.getState().paymentMethods, 'getPaymentMethod').mockReturnValue(googlePaymentMethodData);
 
-            await strategy.initialize(googlePayOptions);
             await strategy.execute(getGoogleOrderRequestBody());
 
             expect(orderActionCreator.submitOrder).toHaveBeenCalled();
@@ -251,135 +262,121 @@ describe('GooglePayPaymentStrategy', () => {
         });
 
         it('gets again the payment information and submit payment', async () => {
-            const googlePaymentMethodData = {
+            jest.spyOn(orderActionCreator, 'submitOrder').mockReturnValue(Promise.resolve());
+            jest.spyOn(paymentActionCreator, 'submitPayment').mockReturnValue(Promise.resolve());
+            jest.spyOn(googlePayPaymentProcessor, 'handleSuccess').mockReturnValue(Promise.resolve());
+            jest.spyOn(googlePayPaymentProcessor, 'displayWallet').mockReturnValue(Promise.resolve(getGooglePaymentDataMock()));
+            jest.spyOn(store.getState().paymentMethods, 'getPaymentMethodOrThrow').mockReturnValue({
                 initializationData: {
                     nonce: 'nonce',
                     card_information: undefined,
                 },
-            };
-
-            const paymentData = getGooglePaymentDataMock();
-
-            jest.spyOn(orderActionCreator, 'submitOrder').mockReturnValue(Promise.resolve());
-            jest.spyOn(paymentActionCreator, 'submitPayment').mockReturnValue(Promise.resolve());
-            jest.spyOn(googlePayPaymentProcessor, 'handleSuccess').mockReturnValue(Promise.resolve());
-            jest.spyOn(googlePayPaymentProcessor, 'displayWallet').mockReturnValue(Promise.resolve(paymentData));
-            jest.spyOn(store.getState().paymentMethods, 'getPaymentMethod').mockReturnValue(googlePaymentMethodData);
+            });
 
             await strategy.initialize(googlePayOptions);
             await strategy.execute(getGoogleOrderRequestBody());
 
+            expect(googlePayPaymentProcessor.displayWallet).toBeCalled();
             expect(orderActionCreator.submitOrder).toHaveBeenCalled();
             expect(paymentActionCreator.submitPayment).toHaveBeenCalled();
         });
 
         it('gets again the payment information and gets an error', async () => {
-            const googlePaymentMethodData = {
-                initializationData: {
-                    nonce: 'nonce',
-                    card_information: undefined,
-                },
-            };
-
             jest.spyOn(orderActionCreator, 'submitOrder').mockReturnValue(Promise.resolve());
             jest.spyOn(paymentActionCreator, 'submitPayment').mockReturnValue(Promise.resolve());
             jest.spyOn(googlePayPaymentProcessor, 'handleSuccess').mockReturnValue(Promise.resolve());
             jest.spyOn(googlePayPaymentProcessor, 'displayWallet').mockReturnValue(
                 Promise.reject({statusCode: 'ERROR'})
             );
-            jest.spyOn(store.getState().paymentMethods, 'getPaymentMethod').mockReturnValue(googlePaymentMethodData);
+            jest.spyOn(store.getState().paymentMethods, 'getPaymentMethodOrThrow').mockReturnValue({
+                initializationData: {
+                    nonce: 'nonce',
+                    card_information: undefined,
+                },
+            });
 
             await strategy.initialize(googlePayOptions);
             await strategy.execute(getGoogleOrderRequestBody());
 
+            expect(googlePayPaymentProcessor.displayWallet).toBeCalled();
             expect(orderActionCreator.submitOrder).toHaveBeenCalled();
             expect(paymentActionCreator.submitPayment).toHaveBeenCalled();
         });
 
         it('gets again the payment information and user closes widget', async () => {
-            const googlePaymentMethodData = {
-                initializationData: {
-                    nonce: 'nonce',
-                    card_information: undefined,
-                },
-            };
-
             jest.spyOn(orderActionCreator, 'submitOrder').mockReturnValue(Promise.resolve());
             jest.spyOn(paymentActionCreator, 'submitPayment').mockReturnValue(Promise.resolve());
             jest.spyOn(googlePayPaymentProcessor, 'handleSuccess').mockReturnValue(Promise.resolve());
             jest.spyOn(googlePayPaymentProcessor, 'displayWallet').mockReturnValue(
                 Promise.reject({statusCode: 'CANCELED'})
             );
-            jest.spyOn(store.getState().paymentMethods, 'getPaymentMethod').mockReturnValue(googlePaymentMethodData);
+            jest.spyOn(store.getState().paymentMethods, 'getPaymentMethodOrThrow').mockReturnValue({
+                initializationData: {
+                    nonce: 'nonce',
+                    card_information: undefined,
+                },
+            });
 
             await strategy.initialize(googlePayOptions);
             await strategy.execute(getGoogleOrderRequestBody());
 
+            expect(googlePayPaymentProcessor.displayWallet).toBeCalled();
             expect(orderActionCreator.submitOrder).toHaveBeenCalled();
             expect(paymentActionCreator.submitPayment).toHaveBeenCalled();
         });
 
-        it('gets again the payment information and in getPayment, paymentMethod is missed', async () => {
-            const paymentData = getGooglePaymentDataMock();
-
+        it('gets again the payment information and in getPayment, nonce is missed', async () => {
             jest.spyOn(orderActionCreator, 'submitOrder').mockReturnValue(Promise.resolve());
             jest.spyOn(paymentActionCreator, 'submitPayment').mockReturnValue(Promise.resolve());
             jest.spyOn(googlePayPaymentProcessor, 'handleSuccess').mockReturnValue(Promise.resolve());
-            jest.spyOn(googlePayPaymentProcessor, 'displayWallet').mockReturnValue(Promise.resolve(paymentData));
-            jest.spyOn(store.getState().paymentMethods, 'getPaymentMethod').mockReturnValue(undefined);
-
-            await strategy.initialize(googlePayOptions);
-            try {
-                await strategy.execute(getGoogleOrderRequestBody());
-            } catch (error) {
-                expect(error).toBeInstanceOf(MissingDataError);
-                expect(error).toEqual(new MissingDataError(MissingDataErrorType.MissingPaymentMethod));
-            }
-        });
-
-        it('gets again the payment information and in getPayment, nonce is missed', async () => {
-            const paymentData = getGooglePaymentDataMock();
-
-            const googlePaymentMethodData = {
+            jest.spyOn(googlePayPaymentProcessor, 'displayWallet').mockReturnValue(Promise.resolve(getGooglePaymentDataMock()));
+            jest.spyOn(store.getState().paymentMethods, 'getPaymentMethodOrThrow').mockReturnValue({
                 initializationData: {
                     nonce: undefined,
                     card_information: undefined,
                 },
-            };
-
-            jest.spyOn(orderActionCreator, 'submitOrder').mockReturnValue(Promise.resolve());
-            jest.spyOn(paymentActionCreator, 'submitPayment').mockReturnValue(Promise.resolve());
-            jest.spyOn(googlePayPaymentProcessor, 'handleSuccess').mockReturnValue(Promise.resolve());
-            jest.spyOn(googlePayPaymentProcessor, 'displayWallet').mockReturnValue(Promise.resolve(paymentData));
-            jest.spyOn(store.getState().paymentMethods, 'getPaymentMethod').mockReturnValue(googlePaymentMethodData);
+            });
 
             await strategy.initialize(googlePayOptions);
             try {
                 await strategy.execute(getGoogleOrderRequestBody());
             } catch (error) {
+                expect(googlePayPaymentProcessor.displayWallet).toBeCalled();
                 expect(error).toBeInstanceOf(MissingDataError);
                 expect(error).toEqual(new MissingDataError(MissingDataErrorType.MissingPayment));
             }
         });
 
         it('submits json encoded nonce for googlepayadyenv2', async () => {
-            const googlePaymentMethodData = {
+            googlePayOptions = {
+                methodId: 'googlepayadyenv2',
+                googlepayadyenv2: {
+                    walletButton: 'mockButton',
+                    onError: () => {},
+                    onPaymentSelect: () => {},
+                },
+            };
+
+            jest.spyOn(orderActionCreator, 'submitOrder').mockReturnValue(Promise.resolve());
+            jest.spyOn(paymentActionCreator, 'submitPayment').mockReturnValue(Promise.resolve());
+            jest.spyOn(store.getState().paymentMethods, 'getPaymentMethodOrThrow').mockReturnValue({
                 initializationData: {
                     nonce: 'token',
                     card_information: 'ci',
                 },
-            };
-            jest.spyOn(orderActionCreator, 'submitOrder').mockReturnValue(Promise.resolve());
-            jest.spyOn(paymentActionCreator, 'submitPayment').mockReturnValue(Promise.resolve());
-            jest.spyOn(store.getState().paymentMethods, 'getPaymentMethod').mockReturnValue(googlePaymentMethodData);
+            });
 
             await strategy.initialize({
                 methodId: 'googlepayadyenv2',
-                googlepayadyenv2: googlePayOptions.googlepaybraintree,
+                googlepayadyenv2: googlePayOptions.googlepayadyenv2,
             });
 
-            await strategy.execute(getGoogleOrderRequestBody());
+            await strategy.execute({
+                ...getGoogleOrderRequestBody(),
+                payment: { methodId: 'googlepayadyenv2' },
+            });
 
+            expect(googlePayAdyenV2PaymentProcessor.initialize).toHaveBeenCalled();
             expect(orderActionCreator.submitOrder).toHaveBeenCalled();
             expect(paymentActionCreator.submitPayment).toHaveBeenCalledWith({
                 methodId: 'googlepayadyenv2',
@@ -392,22 +389,33 @@ describe('GooglePayPaymentStrategy', () => {
         });
 
         it('submits json encoded nonce for authorizenet', async () => {
-            const googlePaymentMethodData = {
+            googlePayOptions = {
+                methodId: 'googlepayauthorizenet',
+                googlepayauthorizenet: {
+                    walletButton: 'mockButton',
+                    onError: () => {},
+                    onPaymentSelect: () => {},
+                },
+            };
+
+            jest.spyOn(orderActionCreator, 'submitOrder').mockReturnValue(Promise.resolve());
+            jest.spyOn(paymentActionCreator, 'submitPayment').mockReturnValue(Promise.resolve());
+            jest.spyOn(store.getState().paymentMethods, 'getPaymentMethodOrThrow').mockReturnValue({
                 initializationData: {
                     nonce: 'token',
                     card_information: 'ci',
                 },
-            };
-            jest.spyOn(orderActionCreator, 'submitOrder').mockReturnValue(Promise.resolve());
-            jest.spyOn(paymentActionCreator, 'submitPayment').mockReturnValue(Promise.resolve());
-            jest.spyOn(store.getState().paymentMethods, 'getPaymentMethod').mockReturnValue(googlePaymentMethodData);
+            });
 
             await strategy.initialize({
                 methodId: 'googlepayauthorizenet',
-                googlepayauthorizenet: googlePayOptions.googlepaybraintree,
+                googlepayauthorizenet: googlePayOptions.googlepayauthorizenet,
             });
 
-            await strategy.execute(getGoogleOrderRequestBody());
+            await strategy.execute({
+                ...getGoogleOrderRequestBody(),
+                payment: { methodId: 'googlepayauthorizenet' },
+            });
 
             expect(orderActionCreator.submitOrder).toHaveBeenCalled();
             expect(paymentActionCreator.submitPayment).toHaveBeenCalledWith({
@@ -421,22 +429,33 @@ describe('GooglePayPaymentStrategy', () => {
         });
 
         it('submits json encoded nonce for stripe', async () => {
-            const googlePaymentMethodData = {
+            googlePayOptions = {
+                methodId: 'googlepaystripe',
+                googlepaystripe: {
+                    walletButton: 'mockButton',
+                    onError: () => {},
+                    onPaymentSelect: () => {},
+                },
+            };
+
+            jest.spyOn(orderActionCreator, 'submitOrder').mockReturnValue(Promise.resolve());
+            jest.spyOn(paymentActionCreator, 'submitPayment').mockReturnValue(Promise.resolve());
+            jest.spyOn(store.getState().paymentMethods, 'getPaymentMethodOrThrow').mockReturnValue({
                 initializationData: {
                     nonce: 'token',
                     card_information: 'ci',
                 },
-            };
-            jest.spyOn(orderActionCreator, 'submitOrder').mockReturnValue(Promise.resolve());
-            jest.spyOn(paymentActionCreator, 'submitPayment').mockReturnValue(Promise.resolve());
-            jest.spyOn(store.getState().paymentMethods, 'getPaymentMethod').mockReturnValue(googlePaymentMethodData);
+            });
 
             await strategy.initialize({
                 methodId: 'googlepaystripe',
-                googlepaystripe: googlePayOptions.googlepaybraintree,
+                googlepaystripe: googlePayOptions.googlepaystripe,
             });
 
-            await strategy.execute(getGoogleOrderRequestBody());
+            await strategy.execute({
+                ...getGoogleOrderRequestBody(),
+                payment: { methodId: 'googlepaystripe' },
+            });
 
             expect(orderActionCreator.submitOrder).toHaveBeenCalled();
             expect(paymentActionCreator.submitPayment).toHaveBeenCalledWith({

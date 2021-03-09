@@ -80,7 +80,7 @@ describe('BraintreePaypalPaymentStrategy', () => {
 
             await braintreePaypalPaymentStrategy.initialize(options);
 
-            expect(braintreePaymentProcessorMock.initialize).toHaveBeenCalledWith('foo', options.braintree);
+            expect(braintreePaymentProcessorMock.initialize).toHaveBeenCalledWith('myToken', options.braintree);
         });
 
         it('preloads paypal', async () => {
@@ -129,7 +129,7 @@ describe('BraintreePaypalPaymentStrategy', () => {
             await braintreePaypalPaymentStrategy.initialize(options);
             await braintreePaypalPaymentStrategy.execute(orderRequestBody, options);
 
-            expect(paymentMethodActionCreator.loadPaymentMethod).toHaveBeenCalledTimes(1);
+            expect(paymentMethodActionCreator.loadPaymentMethod).toHaveBeenCalledTimes(2);
             expect(braintreePaymentProcessorMock.preloadPaypal).toHaveBeenCalledTimes(1);
             expect(braintreePaymentProcessorMock.initialize).toHaveBeenCalledTimes(1);
         });
